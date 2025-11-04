@@ -45,35 +45,41 @@
   <p id="msg">Please wait</p>
 
   <script>
+    // ✅ Replace with your own deployed Apps Script Web App URL
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxGqPi6fxoCQQN9efZwrE8ZU2n8K8Fk07QXeQ2jeIKHOdhNlS6OEGc8aPMVHssgYSjkrA/exec";
 
     const params = new URLSearchParams(window.location.search);
     const cardParam = params.get("card");
+    const msg = document.getElementById("msg");
 
     async function fetchReward() {
-      const msg = document.getElementById("msg");
-
       if (!cardParam) {
         msg.innerText = "❌ Invalid or missing card ID.";
         return;
       }
 
       try {
-        const response = await fetch(`${BACKEND_URL}?card=${encodeURIComponent(cardParam)}`);
+        // ✅ Make sure to use ?mode=update to trigger sheet update
+        const response = await fetch(`${BACKEND_URL}?card=${encodeURIComponent(cardParam)}&mode=update`);
         const data = await response.json();
 
+        console.log("Server response:", data);
+
         if (data.status === "ok") {
-          msg.innerText = data.message;
+          msg.innerText = data.message || "✅ Scan recorded successfully!";
+          
+          // Wait 2 sec, then go to AR experience
           setTimeout(() => {
             window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${cardParam}`;
           }, 2000);
-        } else {
-          msg.innerText = data.message || "⚠️ Unexpected response.";
+        } 
+        else {
+          msg.innerText = data.message || "⚠️ Something went wrong. Try again later.";
         }
 
       } catch (err) {
         console.error(err);
-        msg.innerText = "⚠️ Server connection failed. Try again later.";
+        msg.innerText = "⚠️ Server connection failed. Please try again.";
       }
     }
 
