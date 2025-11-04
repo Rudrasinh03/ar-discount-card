@@ -12,10 +12,10 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #f8f8f8;
-      font-family: Poppins, sans-serif;
+      background: #fafafa;
+      font-family: 'Poppins', sans-serif;
+      color: #222;
       text-align: center;
-      color: #333;
     }
     .loader {
       width: 45px;
@@ -29,8 +29,14 @@
     @keyframes spin {
       100% { transform: rotate(360deg); }
     }
-    h2 { margin-bottom: 10px; }
-    #msg { font-size: 15px; color: #444; }
+    h2 {
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    #msg {
+      font-size: 15px;
+      color: #444;
+    }
   </style>
 </head>
 <body>
@@ -39,10 +45,8 @@
   <p id="msg">Please wait</p>
 
   <script>
-    // 🔗 Replace this with your deployed Google Apps Script URL
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzoiHeWf6_xLUEbGTDCnPuDhfC_DlIa6B5RMr1We1578qspf_cGyfGQKKkgGedG4VK_0g/exec";
 
-    // Get the card ID from the URL, e.g., ?card=QR004
     const params = new URLSearchParams(window.location.search);
     const cardParam = params.get("card");
 
@@ -54,33 +58,19 @@
         return;
       }
 
-      const qrId = cardParam.replace("QR", "").trim() ? cardParam : null;
-      if (!qrId) {
-        msg.innerText = "⚠️ Invalid card format.";
-        return;
-      }
-
       try {
-        // 📨 Send POST request to backend to update scan count + date
-        const res = await fetch(BACKEND_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qrId: cardParam })
-        });
+        const response = await fetch(`${BACKEND_URL}?card=${encodeURIComponent(cardParam)}`);
+        const data = await response.json();
 
-        const text = await res.text();
-        console.log("Server:", text);
-
-        if (text.includes("Scan updated")) {
-          msg.innerText = "✅ Reward updated! Redirecting...";
+        if (data.status === "ok") {
+          msg.innerText = data.message;
           setTimeout(() => {
             window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${cardParam}`;
-          }, 1000);
-        } else if (text.includes("QR not found")) {
-          msg.innerText = "❌ No reward data found for this card.";
+          }, 2000);
         } else {
-          msg.innerText = "⚠️ Unexpected response from server.";
+          msg.innerText = data.message || "⚠️ Unexpected response.";
         }
+
       } catch (err) {
         console.error(err);
         msg.innerText = "⚠️ Server connection failed. Try again later.";
