@@ -12,27 +12,31 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #fafafa;
+      background: linear-gradient(135deg, #f9fafc, #e8f5e9);
       font-family: 'Poppins', sans-serif;
       color: #222;
       text-align: center;
     }
+
     .loader {
-      width: 45px;
-      height: 45px;
-      border: 4px solid #ccc;
-      border-top: 4px solid #4caf50;
+      width: 50px;
+      height: 50px;
+      border: 5px solid #ddd;
+      border-top: 5px solid #4caf50;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
+
     @keyframes spin {
       100% { transform: rotate(360deg); }
     }
+
     h2 {
-      margin-bottom: 10px;
       font-weight: 600;
+      margin-bottom: 8px;
     }
+
     #msg {
       font-size: 15px;
       color: #444;
@@ -45,7 +49,7 @@
   <p id="msg">Please wait</p>
 
   <script>
-    // ✅ Replace with your own deployed Apps Script Web App URL
+    // ✅ Updated working backend Apps Script link
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbznkZfTcjpQHXmO_doueD0aUCIxLeA0ApMkTpTBvef4r1E3at6r1dlC8dE6n6OcM3OwfA/exec";
 
     const params = new URLSearchParams(window.location.search);
@@ -59,27 +63,24 @@
       }
 
       try {
-        // ✅ Make sure to use ?mode=update to trigger sheet update
+        // ✅ Call the backend with mode=update to record the scan
         const response = await fetch(`${BACKEND_URL}?card=${encodeURIComponent(cardParam)}&mode=update`);
         const data = await response.json();
-
         console.log("Server response:", data);
 
         if (data.status === "ok") {
           msg.innerText = data.message || "✅ Scan recorded successfully!";
-          
-          // Wait 2 sec, then go to AR experience
+          // Wait 2 seconds, then open the AR experience
           setTimeout(() => {
             window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${cardParam}`;
           }, 2000);
-        } 
-        else {
-          msg.innerText = data.message || "⚠️ Something went wrong. Try again later.";
+        } else {
+          msg.innerText = data.message || "⚠️ Something went wrong. Try again.";
         }
 
       } catch (err) {
-        console.error(err);
-        msg.innerText = "⚠️ Server connection failed. Please try again.";
+        console.error("Fetch error:", err);
+        msg.innerText = "⚠️ Unable to connect to server. Please try again.";
       }
     }
 
