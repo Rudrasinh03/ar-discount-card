@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f8f8f8;
+      font-family: "Poppins", sans-serif;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #666;
+      font-size: 14px;
+    }
+    .loader {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #4CAF50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loader"></div>
+  <h2>Redirecting to your AR card...</h2>
+  <p>Please wait a moment</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const cardId = params.get("card");
+
+    if (cardId) {
+      const redirectUrl = `https://rudrasinh03.github.io/ar-card/?id=${cardId}`;
+      console.log("Redirecting to:", redirectUrl);
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 1000);
+    } else {
+      document.body.innerHTML = "<h2>❌ Invalid or missing card ID.</h2>";
+    }
+  </script>
+</body>
+</html>
