@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting...</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎁 AR Discount Card</title>
+
   <style>
     body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      background: #f8f8f8;
-      font-family: "Poppins", sans-serif;
-    }
-    h2 {
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f0f8ff, #e6ffe6);
       color: #333;
-      margin-bottom: 10px;
+      text-align: center;
+      padding: 20px;
     }
-    p {
-      color: #666;
-      font-size: 14px;
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 350px;
+      width: 100%;
+      animation: fadeIn 0.8s ease-in-out;
     }
+
     .loader {
       width: 40px;
       height: 40px;
@@ -29,31 +37,135 @@
       border-top: 4px solid #4CAF50;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      margin: 20px auto;
     }
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+
+    h2 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #555;
+      font-size: 15px;
+      margin: 6px 0;
+    }
+
+    .discount {
+      font-size: 2em;
+      font-weight: 700;
+      color: #ff5722;
+    }
+
+    .tier {
+      background: #e8f5e9;
+      color: #388e3c;
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .rewards {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #444;
+      text-align: left;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .redirect {
+      margin-top: 18px;
+    }
+
+    .btn {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn:hover {
+      background: #43a047;
+      transform: scale(1.05);
     }
   </style>
 </head>
+
 <body>
-  <div class="loader"></div>
-  <h2>Redirecting to your AR card...</h2>
-  <p>Please wait a moment</p>
+  <div class="loader" id="loader"></div>
+
+  <div class="card" id="card" style="display: none;">
+    <h2>🎉 Your AR Discount Card</h2>
+    <p class="discount" id="discount">Loading...</p>
+    <p class="tier" id="tier"></p>
+    <p><b>Scan Count:</b> <span id="scanCount"></span></p>
+    <p><b>Next Reward:</b></p>
+    <div class="rewards" id="rewards"></div>
+    <div class="redirect">
+      <button class="btn" id="viewAR">View AR Experience</button>
+    </div>
+  </div>
 
   <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzwqO1ZX7Tg0Ikg8nZojx1jBLTWaGTph5P-HGVmlqSO2g3lhcUAIXUfhtBWj9wrfKTh/exec";
     const params = new URLSearchParams(window.location.search);
     const cardId = params.get("card");
 
-    if (cardId) {
-      const redirectUrl = `https://rudrasinh03.github.io/ar-card/?id=${cardId}`;
-      console.log("Redirecting to:", redirectUrl);
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 1000);
-    } else {
+    const loader = document.getElementById("loader");
+    const card = document.getElementById("card");
+
+    if (!cardId) {
       document.body.innerHTML = "<h2>❌ Invalid or missing card ID.</h2>";
+      return;
     }
+
+    async function fetchCardData() {
+      try {
+        const res = await fetch(`${API_URL}?card=${cardId}`);
+        if (!res.ok) throw new Error("Network response was not ok");
+        const data = await res.json();
+
+        loader.style.display = "none";
+        card.style.display = "block";
+
+        if (!data || !data.discount_assigned) {
+          document.body.innerHTML = "<h2>❌ Card not found or inactive.</h2>";
+          return;
+        }
+
+        document.getElementById("discount").textContent = data.discount_assigned;
+        document.getElementById("tier").textContent = data.tier || "No Tier";
+        document.getElementById("scanCount").textContent = data.scan_count || "0";
+
+        const rewards = data.level_rewards ? JSON.parse(data.level_rewards) : {};
+        document.getElementById("rewards").innerHTML = `
+          <ul style="padding-left:15px; margin:0;">
+            <li>Level 1: ${rewards.level1 || '-'}</li>
+            <li>Level 2: ${rewards.level2 || '-'}</li>
+            <li>Level 3: ${rewards.level3 || '-'}</li>
+          </ul>
+        `;
+
+        document.getElementById("viewAR").addEventListener("click", () => {
+          window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${cardId}`;
+        });
+
+      } catch (err) {
+        loader.style.display = "none";
+        document.body.innerHTML = `<h2>⚠️ Error loading card.</h2><p>${err.message}</p>`;
+      }
+    }
+
+    fetchCardData();
   </script>
 </body>
 </html>
