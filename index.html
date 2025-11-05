@@ -1,90 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AR Discount Card</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AR Discount — Checking...</title>
   <style>
-    body {
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #f9fafc, #e8f5e9);
-      font-family: 'Poppins', sans-serif;
-      color: #222;
-      text-align: center;
-    }
-
-    .loader {
-      width: 50px;
-      height: 50px;
-      border: 5px solid #ddd;
-      border-top: 5px solid #4caf50;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 25px;
-    }
-
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
-
-    h2 {
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    #msg {
-      font-size: 15px;
-      color: #444;
-    }
+    body{font-family:Poppins,Arial,Helvetica,sans-serif;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#fff;color:#222}
+    .loader{width:44px;height:44px;border-radius:50%;border:5px solid #eee;border-top:5px solid #0b8d6d;animation:spin 1s linear infinite;margin-bottom:20px}
+    @keyframes spin{100%{transform:rotate(360deg)}}
+    h1{font-size:18px;margin:0 0 8px}
+    p{margin:0;color:#555}
+    .btn{display:inline-block;margin-top:18px;padding:10px 16px;background:#0b8d6d;color:#fff;border-radius:8px;text-decoration:none}
   </style>
 </head>
 <body>
   <div class="loader"></div>
-  <h2>Fetching your AR reward...</h2>
-  <p id="msg">Please wait</p>
+  <h1>Checking your AR reward...</h1>
+  <p id="msg">Please wait — connecting to system</p>
 
-  <script>
-    // ✅ Updated working backend Apps Script link
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbybSQremuYgDjegUPR7Y5SBTCIb34t-1IWFy6ceovBxYLraU2ePlenUdYWvT2DYzfMItQ/exec";
+<script>
+(async function(){
+  // CONFIG: replace with your deployed Apps Script exec URL
+  const BACKEND = "https://script.google.com/macros/s/AKfycbwHUjQQH989-tEbfrqDpLVgh-dmd8t74dD1Hc8URTqM0mv-K7VfyiA2eqyckr83lVB-/exec"; // e.g. https://script.google.com/macros/s/ABC/exec
 
-    const params = new URLSearchParams(window.location.search);
-    const cardParam = params.get("card");
-    const msg = document.getElementById("msg");
+  // get ?card=QR001 from URL
+  const params = new URLSearchParams(window.location.search);
+  const card = params.get('card') || params.get('id') || null;
+  const msgEl = document.getElementById('msg');
 
-    async function fetchReward() {
-      if (!cardParam) {
-        msg.innerText = "❌ Invalid or missing card ID.";
-        return;
-      }
+  if(!card){
+    msgEl.innerText = "Invalid card. No card id found.";
+    return;
+  }
 
-      try {
-        // ✅ Call the backend with mode=update to record the scan
-        const response = await fetch(`${BACKEND_URL}?card=${encodeURIComponent(cardParam)}&mode=update`);
-        const data = await response.json();
-        console.log("Server response:", data);
+  try{
+    // Call backend to register scan and get response
+    const resp = await fetch(`${BACKEND}?card=${encodeURIComponent(card)}&mode=update`);
+    const json = await resp.json();
+    console.log('backend', json);
 
-        if (data.status === "ok") {
-          msg.innerText = data.message || "✅ Scan recorded successfully!";
-          // Wait 2 seconds, then open the AR experience
-          setTimeout(() => {
-            window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${cardParam}`;
-          }, 2000);
-        } else {
-          msg.innerText = data.message || "⚠️ Something went wrong. Try again.";
-        }
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-        msg.innerText = "⚠️ Unable to connect to server. Please try again.";
-      }
+    if(json.status === 'ok'){
+      // show message then redirect to AR experience,
+      // pass along isFirstScan state in URL param isFirst=true|false
+      msgEl.innerText = json.message;
+      const isFirst = json.isFirstScan ? 'true' : (json.isFirstScan === false ? 'false' : (json.used === 1 ? 'true' : 'false'));
+      setTimeout(()=> {
+        // Redirect to AR page and pass the same card and the first-scan flag
+        window.location.href = 'https:rudrasinh03.github.io/ar-card/?id=${encodeURIComponent(card)}&isFirst=${isFirst}`;
+      }, 1200);
+    } else {
+      msgEl.innerText = json.message || 'Something went wrong';
     }
-
-    fetchReward();
-  </script>
+  } catch(err) {
+    console.error(err);
+    msgEl.innerText = "Server connection failed. Try again later.";
+  }
+})();
+</script>
 </body>
 </html>
