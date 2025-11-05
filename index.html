@@ -10,7 +10,6 @@
     @keyframes spin{100%{transform:rotate(360deg)}}
     h1{font-size:18px;margin:0 0 8px}
     p{margin:0;color:#555}
-    .btn{display:inline-block;margin-top:18px;padding:10px 16px;background:#0b8d6d;color:#fff;border-radius:8px;text-decoration:none}
   </style>
 </head>
 <body>
@@ -20,10 +19,12 @@
 
 <script>
 (async function(){
-  // CONFIG: replace with your deployed Apps Script exec URL
-  const BACKEND = "https://script.google.com/macros/s/AKfycbwHUjQQH989-tEbfrqDpLVgh-dmd8t74dD1Hc8URTqM0mv-K7VfyiA2eqyckr83lVB-/exec"; // e.g. https://script.google.com/macros/s/ABC/exec
+  // CONFIG: put your deployed Apps Script exec URL here:
+  const BACKEND_EXEC_URL = "https://script.google.com/macros/s/AKfycbzjNb2-NoqWmR90WoO5Jxpspw9DjI2ckGWjBoQUYbF_GcjXjWe8o3R4MfhsUNHeLGY/exec"; // e.g. https://script.google.com/macros/s/ABC/exec
 
-  // get ?card=QR001 from URL
+  // AR page base — where your AR experience lives (change to your repo)
+  const AR_PAGE_BASE = "https://rudrasinh03.github.io/ar-card/"; // example
+
   const params = new URLSearchParams(window.location.search);
   const card = params.get('card') || params.get('id') || null;
   const msgEl = document.getElementById('msg');
@@ -35,19 +36,24 @@
 
   try{
     // Call backend to register scan and get response
-    const resp = await fetch(`${BACKEND}?card=${encodeURIComponent(card)}&mode=update`);
+    const resp = await fetch(`${BACKEND_EXEC_URL}?card=${encodeURIComponent(card)}&mode=update`);
     const json = await resp.json();
     console.log('backend', json);
 
-    if(json.status === 'ok'){
-      // show message then redirect to AR experience,
-      // pass along isFirstScan state in URL param isFirst=true|false
+    if(json.status === 'ok') {
       msgEl.innerText = json.message;
-      const isFirst = json.isFirstScan ? 'true' : (json.isFirstScan === false ? 'false' : (json.used === 1 ? 'true' : 'false'));
+
+      // Pass isFirst and discount to AR page via query string
+      const isFirst = json.isFirstScan === true || json.isFirstScan === "true" || json.isFirstScan === undefined ? (json.isFirstScan === true) : false;
+      // Better: backend uses isFirstScan only when appropriate. We check message/discern
+      const firstFlag = (json.isFirstScan === true) ? 'true' : 'false';
+      const discount = encodeURIComponent(json.discount_assigned || "");
+
       setTimeout(()=> {
-        // Redirect to AR page and pass the same card and the first-scan flag
-        window.location.href = 'https:rudrasinh03.github.io/ar-card/?id=${encodeURIComponent(card)}&isFirst=${isFirst}`;
-      }, 1200);
+        // redirect to AR page, include original card id and flags
+        const arUrl = `${AR_PAGE_BASE}?id=${encodeURIComponent(card)}&isFirst=${firstFlag}&discount=${discount}`;
+        window.location.href = arUrl;
+      }, 1100);
     } else {
       msgEl.innerText = json.message || 'Something went wrong';
     }
