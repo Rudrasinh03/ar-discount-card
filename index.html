@@ -19,9 +19,8 @@
 
 <script>
 (async function(){
-  // <<< PUT YOUR DEPLOYED APPS SCRIPT EXEC URL HERE >>>
   const BACKEND = "https://script.google.com/macros/s/AKfycbyyJy9G9LOa2bcuKMq8fyLd_167Tu-kDYgpGbyIwjsPBoevjNKTBZUBG2DvPtNP8r4F/exec";
-  const AR_PAGE = "https://rudrasinh03.github.io/ar-card/"; // ar experience base
+  const AR_PAGE = "https://rudrasinh03.github.io/ar-card/";
 
   const params = new URLSearchParams(window.location.search);
   const card = params.get('card') || params.get('id') || null;
@@ -34,23 +33,20 @@
 
   try{
     const resp = await fetch(`${BACKEND}?card=${encodeURIComponent(card)}&mode=update`);
-    if (!resp.ok) throw new Error("Network response not ok");
     const json = await resp.json();
     console.log('backend', json);
 
-    // DO NOT show raw backend message (prevents cheap small message)
     msgEl.innerText = "Redirecting to AR experience...";
 
-    // ensure discount param is safe
     const discount = encodeURIComponent(json.discount_assigned || "");
     const isFirst = json.isFirstScan ? "true" : "false";
 
-    setTimeout(()=> {
-      const arUrl = `${AR_PAGE}?id=${encodeURIComponent(card)}&isFirst=${isFirst}&discount=${discount}`;
-      window.location.href = `https://rudrasinh03.github.io/ar-card/?id=${encodeURIComponent(card)}&isFirst=${isFirst}`;
+    setTimeout(()=>{
+      // ✅ Correct full redirect with all params
+      window.location.href = `${AR_PAGE}?id=${encodeURIComponent(card)}&isFirst=${isFirst}&discount=${discount}`;
     }, 700);
 
-  } catch(err){
+  }catch(err){
     console.error(err);
     msgEl.innerText = "Server connection failed. Try again later.";
   }
